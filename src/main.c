@@ -1,161 +1,75 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <time.h>
 
-#define MAX_LINES 10
-#define GRID_WIDTH 20
-#define GRID_HEIGHT 20
+#include "utils.h"
+#include "wordSearch.h"
 
-int readFile(const char *path, char **lines)
+int main(int argc, char *argv[])
 {
-    FILE *file = fopen(path, "r");
-    if (!file)
+    if (argc != 5)
     {
-        perror("Failed to open file");
-        return -1;
+        printf("Invalid arguments: Expected 5\n");
+        printf("Usage: ./wordSearch.exe <width> <height> <path to words> <output path>\n");
+        return 1;
     }
 
-    char lineBuffer[1024];
-    int count = 0;
+    int width = atoi(argv[1]);
+    int height = atoi(argv[2]);
+    char *path = argv[3];
+    char *resultPath = argv[4];
 
-    while (count < MAX_LINES && fgets(lineBuffer, sizeof(lineBuffer), file))
+    int lineCount = 0;
+    char **lines = readFile(path, &lineCount);
+    if (!lines)
+        return 1;
+
+    char **wordSearch = malloc(height * sizeof(char *));
+    char **wordSearchSolution = malloc(height * sizeof(char *));
+
+    for (int i = 0; i < height; i++)
     {
-        lineBuffer[strcspn(lineBuffer, "\n")] = '\0';
-        lines[count] = strdup(lineBuffer);
-        count++;
+        wordSearch[i] = malloc(width * sizeof(char));
+        wordSearchSolution[i] = malloc(width * sizeof(char));
     }
 
-    fclose(file);
-    return count;
-}
+    populate(wordSearch, width, height, wordSearchSolution, lines, lineCount);
 
-int writeFile(const char *path, char grid[GRID_HEIGHT][GRID_WIDTH])
-{
-    FILE *file = fopen(path, "w");
-    if (!file)
+    save(resultPath, "word_search.txt", wordSearch, height, width);
+    save(resultPath, "solution.txt", wordSearchSolution, height, width);
+
+    for (int i = 0; i < height; i++)
     {
-        perror("Failed to open file");
-        return -1;
+        free(wordSearch[i]);
+        free(wordSearchSolution[i]);
     }
-
-    for (int y = 0; y < GRID_HEIGHT; y++)
-    {
-        for (int x = 0; x < GRID_WIDTH; x++)
-        {
-            fputc(grid[y][x], file);
-            fputc(' ', file);
-        }
-        fputc('\n', file);
-    }
-
-    fclose(file);
-    printf("Grid successfully saved to %s\n", path);
-    return 0;
-}
-
-int populateVertical(char grid[GRID_HEIGHT][GRID_WIDTH], char *word, int depth)
-{
-    if (depth <= 0)
-        return 1;
-
-    int len = strlen(word);
-    int x = rand() % GRID_WIDTH;
-    int y = rand() % (GRID_HEIGHT - len);
-
-    for (int j = 0; j < len; j++)
-        if (grid[y + j][x] != '.' && grid[y + j][x] != word[j])
-            return populateVertical(grid, word, depth - 1);
-
-    for (int j = 0; j < len; j++)
-        grid[y + j][x] = word[j];
-    return 0;
-}
-
-int populateHorizontal(char grid[GRID_HEIGHT][GRID_WIDTH], char *word, int depth)
-{
-    if (depth <= 0)
-        return 1;
-
-    int len = strlen(word);
-    int x = rand() % (GRID_WIDTH - len);
-    int y = rand() % GRID_HEIGHT;
-
-    for (int j = 0; j < len; j++)
-        if (grid[y][x + j] != '.' && grid[y][x + j] != word[j])
-            return populateHorizontal(grid, word, depth - 1);
-
-    for (int j = 0; j < len; j++)
-        grid[y][x + j] = word[j];
-    return 0;
-}
-
-int populate(char wordSearch[GRID_HEIGHT][GRID_WIDTH], char solution[GRID_HEIGHT][GRID_WIDTH], char **words, int wordCount)
-{
-    srand(time(NULL));
-
-    // Copy grid
-    char copy[GRID_HEIGHT][GRID_WIDTH];
-    memcpy(copy, wordSearch, sizeof(wordSearch));
-
-    // Initialize grid
-    for (int i = 0; i < GRID_HEIGHT; i++)
-        for (int j = 0; j < GRID_WIDTH; j++)
-            copy[i][j] = '.';
-
-    for (int i = 0; i < wordCount; i++)
-    {
-        char *word = words[i];
-        int len = strlen(word);
-        int direction = rand() % 2; // 0: Vertical, 1: Horizontal
-        int x, y;
-
-        if (direction == 0) // Vertical
-        {
-            populateVertical(copy, word, 5);
-        }
-        else // Horizontal
-        {
-            populateHorizontal(copy, word, 5);
-        }
-    }
-
-    // Copy back to word search and solution
-    memcpy(wordSearch, copy, sizeof(copy));
-    memcpy(solution, copy, sizeof(copy));
-
-    for (int y = 0; y < GRID_HEIGHT; y++)
-        for (int x = 0; x < GRID_WIDTH; x++)
-            if (wordSearch[y][x] == '.')
-                wordSearch[y][x] = 'A' + rand() % 26;
-
-    return 0;
-}
-
-int main()
-{
-    char *lines[MAX_LINES] = {0};
-
-    int lineCount = readFile("../../words.txt", lines);
-    if (lineCount == -1)
-        return 1;
-
-    char wordSearch[GRID_HEIGHT][GRID_WIDTH];
-    char solution[GRID_HEIGHT][GRID_WIDTH];
-
-    int res = populate(wordSearch, solution, lines, lineCount);
-    if (res == -1)
-        return 1;
-
-    res = writeFile("../../word_search.txt", wordSearch);
-    if (res == -1)
-        return 1;
-    res = writeFile("../../solution.txt", solution);
-    if (res == -1)
-        return 1;
+    free(wordSearch);
+    free(wordSearchSolution);
 
     for (int i = 0; i < lineCount; i++)
+    {
         free(lines[i]);
+    }
+    free(lines);
 
+    return 0;
+}
+
+int save(char *resultPath, const char *fileName, char **wordSearch, int height, int width)
+{
+    int wordSearchPathLength = strlen(resultPath) + strlen(fileName) + 2;
+    char *fullPath = malloc(wordSearchPathLength);
+
+    if (!fullPath)
+    {
+        perror("Failed to allocate memory");
+        return 1;
+    }
+
+    strcpy(fullPath, resultPath);
+    if (resultPath[strlen(resultPath) - 1] != '/')
+        strcat(fullPath, "/");
+    strcat(fullPath, fileName);
+    writeFile(fullPath, wordSearch, height, width);
+    free(fullPath);
     return 0;
 }
