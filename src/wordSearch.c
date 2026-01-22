@@ -3,7 +3,10 @@
 int populateVertical(char **wordSearch, int width, int height, char *word, int depth)
 {
     if (depth <= 0)
+    {
+        printf("Failed to add word \"%s\", no space found.\n", word);
         return 1;
+    }
 
     int len = strlen(word);
     int x = rand() % width;
@@ -21,7 +24,10 @@ int populateVertical(char **wordSearch, int width, int height, char *word, int d
 int populateHorizontal(char **wordSearch, int width, int height, char *word, int depth)
 {
     if (depth <= 0)
+    {
+        printf("Failed to add word \"%s\", no space found.\n", word);
         return 1;
+    }
 
     int len = strlen(word);
     int x = rand() % (width - len);
@@ -52,9 +58,9 @@ int populate(char **wordSearch, int width, int height, char **solution, char **w
         int direction = rand() % 2; // 0: Vertical, 1: Horizontal
 
         if (direction == 0)
-            populateVertical(wordSearch, width, height, word, 5);
+            populateVertical(wordSearch, width, height, word, 10);
         else
-            populateHorizontal(wordSearch, width, height, word, 5);
+            populateHorizontal(wordSearch, width, height, word, 10);
     }
 
     for (int i = 0; i < height; i++)

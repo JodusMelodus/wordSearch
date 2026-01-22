@@ -10,30 +10,35 @@ char **readFile(const char *path, int *rowCount)
     }
 
     char **lines = NULL;
-    char buffer[MAX_LINE_LENGTH];
-    int count = 0;
+    char buffer[256];
+    int lineCount = 0;
 
-    while (fgets(buffer, sizeof(buffer), file))
+    while (fscanf(file, "%255[a-zA-Z]", buffer) == 1)
     {
-        char **temp = realloc(lines, (count + 1) * sizeof(char *));
+        char **temp = realloc(lines, (lineCount + 1) * sizeof(char *));
         if (!temp)
         {
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < lineCount; i++)
                 free(lines[i]);
             free(lines);
             fclose(file);
             return NULL;
         }
         lines = temp;
-        lines[count] = strdup(buffer);
-        lines[count][strcspn(lines[count], "\r\n")] = 0;
-        for (int i = 0; lines[count][i]; i++)
-            lines[count][i] = toupper((unsigned char)lines[count][i]);
-        count++;
+        lines[lineCount] = strdup(buffer);
+        for (int i = 0; lines[lineCount][i]; i++)
+            lines[lineCount][i] = toupper((unsigned char)lines[lineCount][i]);
+        lineCount++;
+
+        int c;
+        while ((c = fgetc(file)) != EOF && !isalpha(c))
+            ;
+        if (c != EOF)
+            ungetc(c, file);
     }
 
     fclose(file);
-    *rowCount = count;
+    *rowCount = lineCount;
     return lines;
 }
 

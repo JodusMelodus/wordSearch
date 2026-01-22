@@ -6,6 +6,11 @@
 
 int main(int argc, char *argv[])
 {
+    return generateWordSearch(argc, argv);
+}
+
+int generateWordSearch(int argc, char *argv[])
+{
     if (argc != 5)
     {
         printf("Invalid arguments: Expected 5\n");
@@ -50,10 +55,8 @@ int main(int argc, char *argv[])
         free(lines[i]);
     }
     free(lines);
-
     return 0;
 }
-
 int save(char *resultPath, const char *fileName, char **wordSearch, int height, int width)
 {
     int wordSearchPathLength = strlen(resultPath) + strlen(fileName) + 2;

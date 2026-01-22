@@ -6,6 +6,7 @@ A basic word search and solution generater.
 
 - **Custom Dimensions:** Generate grids of any size (e.g. 10x10 or 50x50).
 - **Batch Word Loading:** Import word lists directly from `.txt` files.
+- **Supports Many Formats:** No specific format required for the input file.
 - **Dual Ouput:** Automatically exports two files:
     1. `word_search.txt`: The playable puzzle filled with random characters.
     2. `solution.txt`: The answer key showing only the hidden words.
@@ -47,20 +48,7 @@ cmake --build .
 
 ## 📄 Input File Format
 
-Your input `.txt` file should contain one word per line. For example:
-
-```
-Vortex
-Labyrinth
-Quicksilver
-Horizon
-Nebula
-Melody
-Cascading
-Obsidian
-Zephyr
-Echo
-```
+The program automatically identifies the words in the file which you provide. So no format needed!
 
 ## 🖼️ Example Output
 
